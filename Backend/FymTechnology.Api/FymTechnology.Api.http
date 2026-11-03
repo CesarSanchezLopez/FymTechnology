@@ -1,0 +1,6 @@
+@FymTechnology.Api_HostAddress = http://localhost:5246
+
+GET {{FymTechnology.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
