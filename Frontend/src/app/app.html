@@ -1,0 +1,64 @@
+@if (!token) {
+  <div class="login-container">
+    <p-card>
+      <ng-template #header>
+        <div class="login-header">
+          <i class="pi pi-shield"></i>
+          <h2>FYM TECHNOLOGY</h2>
+          <span>Administración de usuarios y roles</span>
+        </div>
+      </ng-template>
+
+      <form (ngSubmit)="login()">
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input pInputText type="email"
+            [(ngModel)]="email" name="email" required />
+        </div>
+
+        <div class="field">
+          <label>Contraseña</label>
+          <p-password [(ngModel)]="password"
+            name="password" [feedback]="false"
+            [toggleMask]="true" styleClass="w-full"
+            inputStyleClass="w-full" />
+        </div>
+
+        @if (errorMessage) {
+          <p-message severity="error" [text]="errorMessage" />
+        }
+
+        <p-button type="submit" label="Iniciar sesión"
+          icon="pi pi-sign-in" [loading]="loading"
+          [disabled]="!email || !password" />
+      </form>
+    </p-card>
+  </div>
+} @else {
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>FYM TECHNOLOGY</h2>
+      <span class="menu-label">MENÚ PRINCIPAL</span>
+
+      <a routerLink="/dashboard" routerLinkActive="active">
+        <i class="pi pi-home"></i> Dashboard
+      </a>
+
+      <a routerLink="/users" routerLinkActive="active">
+        <i class="pi pi-users"></i> Usuarios
+      </a>
+
+      <a routerLink="/assign-role" routerLinkActive="active">
+        <i class="pi pi-shield"></i> Asignar roles
+      </a>
+
+      <button class="logout" (click)="logout()">
+        <i class="pi pi-sign-out"></i> Cerrar sesión
+      </button>
+    </aside>
+
+    <main class="main-content">
+      <router-outlet />
+    </main>
+  </div>
+}

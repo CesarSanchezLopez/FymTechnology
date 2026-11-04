@@ -1,0 +1,89 @@
+
+<h1>Usuarios</h1>
+<p>Registro y consulta de usuarios del sistema.</p>
+
+@if (success) {
+  <p-message severity="success" [text]="success" />
+}
+@if (error) {
+  <p-message severity="error" [text]="error" />
+}
+
+<p-card header="Registrar usuario">
+  <form (ngSubmit)="createUser()">
+    <div class="field">
+      <label>Nombres</label>
+      <input pInputText [(ngModel)]="newUser.firstName"
+        name="firstName" required />
+    </div>
+
+    <div class="field">
+      <label>Apellidos</label>
+      <input pInputText [(ngModel)]="newUser.lastName"
+        name="lastName" required />
+    </div>
+
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input pInputText type="email"
+        [(ngModel)]="newUser.email" name="email" required />
+    </div>
+
+    <div class="field">
+      <label>Contraseña</label>
+      <p-password [(ngModel)]="newUser.password"
+        name="password" [feedback]="false"
+        [toggleMask]="true" styleClass="w-full"
+        inputStyleClass="w-full" />
+    </div>
+
+    <div class="field">
+      <label>Rol inicial</label>
+      <select [(ngModel)]="newUser.roleId"
+        name="roleId" required>
+        <option value="">Seleccionar rol</option>
+        @for (role of roles; track role.id) {
+          <option [value]="role.id">
+            {{ role.name }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <p-button
+      type="submit"
+      label="Crear usuario"
+      icon="pi pi-user-plus"
+      [disabled]="!newUser.firstName || !newUser.lastName ||
+        !newUser.email || !newUser.password || !newUser.roleId"
+    />
+  </form>
+</p-card>
+
+<br />
+
+<p-card header="Usuarios registrados">
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Roles</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users; track user.id) {
+          <tr>
+            <td>{{ user.firstName }} {{ user.lastName }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.roles?.join(', ') }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <p-button label="Actualizar" icon="pi pi-refresh"
+    severity="secondary" (onClick)="loadUsers()" />
+</p-card>

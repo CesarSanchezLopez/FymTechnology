@@ -1,0 +1,63 @@
+
+<h1>Asignar roles</h1>
+<p>Administra los roles de los usuarios registrados.</p>
+
+@if (message) {
+  <p-message severity="success" [text]="message" />
+}
+
+@if (error) {
+  <p-message severity="error" [text]="error" />
+}
+
+<p-card header="Asignación de roles">
+
+  <div class="field">
+    <label>Usuario</label>
+
+    <select [(ngModel)]="userId" name="user">
+      <option value="">Seleccionar usuario</option>
+
+      @for (user of users; track user.id) {
+        <option [value]="user.id">
+          {{ user.firstName }} {{ user.lastName }} - {{ user.email }}
+        </option>
+      }
+    </select>
+  </div>
+
+  @if (selectedUser) {
+    <div class="field">
+      <label>Roles actuales</label>
+      <p>
+        {{ selectedUser.roles?.join(', ') || 'Sin roles asignados' }}
+      </p>
+    </div>
+  }
+
+  <div class="field">
+    <label>Nuevo rol</label>
+
+    <select [(ngModel)]="roleId" name="role">
+      <option value="">Seleccionar rol</option>
+
+      @for (role of roles; track role.id) {
+       <option
+  [value]="role.id"
+  [disabled]="role.name === 'SuperAdmin'
+    || selectedUser?.roles?.includes(role.name)">
+  {{ role.name }}
+</option>
+      }
+    </select>
+  </div>
+
+  <p-button
+    label="Asignar rol"
+    icon="pi pi-shield"
+    (onClick)="assign()"
+    [disabled]="!userId || !roleId || loading"
+    [loading]="loading"
+  />
+
+</p-card>

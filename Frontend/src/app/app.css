@@ -1,0 +1,113 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-container p-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-header {
+  text-align: center;
+  padding: 30px 20px 10px;
+}
+
+.login-header i {
+  font-size: 2.5rem;
+  color: var(--p-primary-color);
+}
+
+.login-header h2 {
+  margin-bottom: 5px;
+}
+
+.login-header span {
+  color: var(--p-text-muted-color);
+  font-size: .9rem;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 245px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #1e293b;
+  color: white;
+  padding: 25px 15px;
+}
+
+.sidebar h2 {
+  font-size: 1.15rem;
+  padding: 0 10px 25px;
+}
+
+.menu-label {
+  color: #94a3b8;
+  font-size: .7rem;
+  padding: 0 12px 12px;
+}
+
+.sidebar a,
+.sidebar .logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  margin-bottom: 6px;
+  border: 0;
+  border-radius: 6px;
+  color: #e2e8f0;
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: .95rem;
+  text-align: left;
+}
+
+.sidebar a:hover,
+.sidebar .logout:hover,
+.sidebar a.active {
+  background: #334155;
+  color: white;
+}
+
+.sidebar .logout {
+  margin-top: auto;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 30px;
+  background: var(--p-surface-50);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.w-full {
+  width: 100%;
+}
+
+@media (max-width: 650px) {
+  .sidebar {
+    width: 175px;
+  }
+
+  .main-content {
+    padding: 15px;
+  }
+}
