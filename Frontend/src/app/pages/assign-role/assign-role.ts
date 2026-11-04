@@ -26,7 +26,9 @@ export class AssignRole implements OnInit {
 
   message = '';
   error = '';
+
   loading = false;
+  assigning = false;
 
   constructor(private http: HttpClient) {}
 
@@ -40,7 +42,6 @@ export class AssignRole implements OnInit {
     this.loadData();
   }
 
-  // Carga usuarios y roles de manera conjunta.
   loadData(): void {
     this.loading = true;
     this.error = '';
@@ -63,13 +64,11 @@ export class AssignRole implements OnInit {
       error: err => {
         console.error('Error cargando datos:', err);
 
-        if (err.name === 'TimeoutError') {
-          this.error = 'La carga de usuarios y roles tardó demasiado.';
-        } else if (err.status === 0) {
-          this.error = 'No fue posible conectar con el servidor.';
-        } else {
-          this.error = 'No fue posible cargar los usuarios y roles.';
-        }
+        this.error = err.name === 'TimeoutError'
+          ? 'La carga de usuarios y roles tardó demasiado.'
+          : err.status === 0
+            ? 'No fue posible conectar con el servidor.'
+            : 'No fue posible cargar los usuarios y roles.';
       }
     });
   }
@@ -78,63 +77,61 @@ export class AssignRole implements OnInit {
     return this.users.find(user => user.id === this.userId);
   }
 
-  assign(): void {
-    this.message = '';
-    this.error = '';
+assign(): void {
+  this.message = '';
+  this.error = '';
 
-    if (!this.userId || !this.roleId) {
-      this.error = 'Selecciona un usuario y un rol.';
-      return;
-    }
+  if (!this.userId || !this.roleId) {
+    this.error = 'Selecciona un usuario y un rol.';
+    return;
+  }
 
-    if (this.loading) {
-      return;
-    }
+  if (this.assigning) {
+    return;
+  }
 
-    const roleName = this.roles.find(
-      role => role.id === this.roleId
-    )?.name;
+  const selectedRole = this.roles.find(
+    role => role.id === this.roleId
+  );
 
-    this.loading = true;
+  const roleName = selectedRole?.name;
 
-    this.http.put(
-      `${this.api}/Users/${this.userId}/roles/${this.roleId}`,
-      {},
-      { headers: this.headers }
-    ).pipe(
-      timeout(15000),
-      finalize(() => this.loading = false)
-    ).subscribe({
-      next: () => {
-        this.message = `Rol "${roleName ?? 'seleccionado'}" asignado correctamente.`;
+  this.assigning = true;
 
-        this.roleId = '';
+  this.http.put(
+    `${this.api}/Users/${this.userId}/roles/${this.roleId}`,
+    {},
+    { headers: this.headers }
+  ).pipe(
+    timeout(15000),
+    finalize(() => this.assigning = false)
+  ).subscribe({
+    next: () => {
+      // Actualizar localmente el rol del usuario.
+      const user = this.users.find(
+        user => user.id === this.userId
+      );
 
-        // Actualizar la información de los usuarios.
-        this.loadData();
-      },
-      error: err => {
-        console.error('Error asignando rol:', err);
+      if (user) {
+        user.roles = [...(user.roles || []), roleName];
+      }
 
-        if (err.name === 'TimeoutError') {
-          this.error = 'La operación tardó demasiado. Verifica si el rol fue asignado antes de intentarlo nuevamente.';
-          return;
-        }
+      this.message = `Rol "${roleName ?? 'seleccionado'}" asignado correctamente.`;
 
-        if (err.status === 0) {
-          this.error = 'No fue posible conectar con el servidor.';
-          return;
-        }
+      this.roleId = '';
+    },
+    error: err => {
+      console.error('Error asignando rol:', err);
 
-        if (Array.isArray(err.error)) {
-          this.error = err.error
-            .map((e: any) =>
-              e.errorMessage || e.message || JSON.stringify(e)
-            )
-            .join(' | ');
-          return;
-        }
-
+      if (err.name === 'TimeoutError') {
+        this.error = 'La operación tardó demasiado. Verifica si el rol fue asignado antes de intentarlo nuevamente.';
+      } else if (err.status === 0) {
+        this.error = 'No fue posible conectar con el servidor.';
+      } else if (Array.isArray(err.error)) {
+        this.error = err.error
+          .map((e: any) => e.errorMessage || e.message || JSON.stringify(e))
+          .join(' | ');
+      } else {
         this.error =
           err.error?.detail ||
           err.error?.message ||
@@ -142,6 +139,8 @@ export class AssignRole implements OnInit {
           (typeof err.error === 'string' ? err.error : null) ||
           `Error asignando el rol. Código HTTP: ${err.status}`;
       }
-    });
-  }
+    }
+  });
+}
+
 }
