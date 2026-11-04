@@ -5,6 +5,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
+import { forkJoin, finalize, timeout } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-assign-role',
@@ -14,7 +16,7 @@ import { MessageModule } from 'primeng/message';
 })
 export class AssignRole implements OnInit {
 
-  private api = 'https://localhost:7022/api';
+  private api = environment.apiUrl;
 
   users: any[] = [];
   roles: any[] = [];
@@ -35,30 +37,39 @@ export class AssignRole implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadUsers();
-    this.loadRoles();
+    this.loadData();
   }
 
-  loadUsers(): void {
-    this.http.get<any[]>(`${this.api}/Users`, {
-      headers: this.headers
-    }).subscribe({
-      next: data => this.users = data,
-      error: err => {
-        console.error('Error consultando usuarios:', err);
-        this.error = 'Error consultando usuarios.';
-      }
-    });
-  }
+  // Carga usuarios y roles de manera conjunta.
+  loadData(): void {
+    this.loading = true;
+    this.error = '';
 
-  loadRoles(): void {
-    this.http.get<any[]>(`${this.api}/Roles`, {
-      headers: this.headers
-    }).subscribe({
-      next: data => this.roles = data,
+    forkJoin({
+      users: this.http.get<any[]>(`${this.api}/Users`, {
+        headers: this.headers
+      }),
+      roles: this.http.get<any[]>(`${this.api}/Roles`, {
+        headers: this.headers
+      })
+    }).pipe(
+      timeout(15000),
+      finalize(() => this.loading = false)
+    ).subscribe({
+      next: result => {
+        this.users = result.users;
+        this.roles = result.roles;
+      },
       error: err => {
-        console.error('Error consultando roles:', err);
-        this.error = 'Error consultando roles.';
+        console.error('Error cargando datos:', err);
+
+        if (err.name === 'TimeoutError') {
+          this.error = 'La carga de usuarios y roles tardó demasiado.';
+        } else if (err.status === 0) {
+          this.error = 'No fue posible conectar con el servidor.';
+        } else {
+          this.error = 'No fue posible cargar los usuarios y roles.';
+        }
       }
     });
   }
@@ -68,36 +79,52 @@ export class AssignRole implements OnInit {
   }
 
   assign(): void {
-    this.error = '';
     this.message = '';
+    this.error = '';
+
+    if (!this.userId || !this.roleId) {
+      this.error = 'Selecciona un usuario y un rol.';
+      return;
+    }
+
+    if (this.loading) {
+      return;
+    }
+
+    const roleName = this.roles.find(
+      role => role.id === this.roleId
+    )?.name;
+
     this.loading = true;
 
     this.http.put(
       `${this.api}/Users/${this.userId}/roles/${this.roleId}`,
       {},
       { headers: this.headers }
+    ).pipe(
+      timeout(15000),
+      finalize(() => this.loading = false)
     ).subscribe({
       next: () => {
-        const roleName = this.roles.find(
-          role => role.id === this.roleId
-        )?.name;
-
-        this.message = `Rol "${roleName}" asignado correctamente.`;
-        this.loading = false;
+        this.message = `Rol "${roleName ?? 'seleccionado'}" asignado correctamente.`;
 
         this.roleId = '';
 
-        // Recargar usuarios para visualizar los roles actualizados.
-        this.loadUsers();
+        // Actualizar la información de los usuarios.
+        this.loadData();
       },
-
       error: err => {
         console.error('Error asignando rol:', err);
 
-        console.error(
-          'Detalle del backend:',
-          JSON.stringify(err.error, null, 2)
-        );
+        if (err.name === 'TimeoutError') {
+          this.error = 'La operación tardó demasiado. Verifica si el rol fue asignado antes de intentarlo nuevamente.';
+          return;
+        }
+
+        if (err.status === 0) {
+          this.error = 'No fue posible conectar con el servidor.';
+          return;
+        }
 
         if (Array.isArray(err.error)) {
           this.error = err.error
@@ -105,16 +132,16 @@ export class AssignRole implements OnInit {
               e.errorMessage || e.message || JSON.stringify(e)
             )
             .join(' | ');
-        } else {
-          this.error = err.error?.detail
-            || err.error?.message
-            || JSON.stringify(err.error)
-            || 'Error asignando el rol.';
+          return;
         }
 
-        this.loading = false;
+        this.error =
+          err.error?.detail ||
+          err.error?.message ||
+          err.error?.title ||
+          (typeof err.error === 'string' ? err.error : null) ||
+          `Error asignando el rol. Código HTTP: ${err.status}`;
       }
     });
   }
 }
-

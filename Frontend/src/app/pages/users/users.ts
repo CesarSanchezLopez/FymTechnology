@@ -1,4 +1,3 @@
-
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -7,6 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-users',
@@ -23,7 +23,7 @@ import { MessageModule } from 'primeng/message';
 })
 export class Users implements OnInit {
 
-  private api = 'https://localhost:7022/api';
+  private api = environment.apiUrl;
 
   users: any[] = [];
   roles: any[] = [];

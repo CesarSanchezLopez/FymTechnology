@@ -8,7 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-
+import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -32,8 +32,9 @@ export class App {
   errorMessage = '';
   token = localStorage.getItem('fym_token') || '';
 
-  private readonly apiUrl = 'https://localhost:7022/api';
-
+  private readonly apiUrl = environment.apiUrl;
+  
+   
   constructor(
     private http: HttpClient,
     private router: Router,
